@@ -139,7 +139,7 @@ public partial class MainWindow : Window
         // Dev: ../ui/bin/Release next to setup bin
         var candidates = new[]
         {
-            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "ui", "bin", "Release")),
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "ui", "bin", "Release")),
             Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "package")),
         };
         foreach (var c in candidates)

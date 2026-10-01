@@ -24,12 +24,34 @@ Push-Location "$root\setup"
 dotnet build -c Release
 Pop-Location
 
-# Package zip for GitHub Release (manager runtime)
+# Package zip for GitHub / Gitee Release (manager runtime only)
 $pkg = "$root\dist"
 New-Item -ItemType Directory -Force -Path $pkg | Out-Null
 $zip = "$pkg\MystiaModManager.zip"
 if (Test-Path $zip) { Remove-Item $zip -Force }
-Compress-Archive -Path "$root\ui\bin\Release\*" -DestinationPath $zip -Force
+$stage = Join-Path $env:TEMP "MystiaModManager-pack"
+if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $stage | Out-Null
+$names = @(
+  "MystiaModManager.exe",
+  "MystiaModManager.exe.config",
+  "mystia_core.dll",
+  "Newtonsoft.Json.dll",
+  "System.Buffers.dll",
+  "System.Memory.dll",
+  "System.Numerics.Vectors.dll",
+  "System.Runtime.CompilerServices.Unsafe.dll",
+  "System.ValueTuple.dll",
+  "Wpf.Ui.Abstractions.dll",
+  "Wpf.Ui.dll"
+)
+foreach ($name in $names) {
+  $src = Join-Path "$root\ui\bin\Release" $name
+  if (-not (Test-Path $src)) { throw "缺少打包文件: $src" }
+  Copy-Item $src (Join-Path $stage $name) -Force
+}
+Compress-Archive -Path (Join-Path $stage "*") -DestinationPath $zip -Force
+Remove-Item $stage -Recurse -Force
 
 # Single-file installer for players
 $setupSrc = "$root\setup\bin\Release\MystiaModManager.Setup.exe"

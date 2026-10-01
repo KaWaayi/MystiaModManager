@@ -38,6 +38,7 @@
         <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
           <TextBlock x:Name="PathHint" TextWrapping="Wrap" Opacity="0.7" FontSize="12"/>
           <ui:Button Content="启动游戏（模组）" Appearance="Primary" Margin="0,8,0,0" HorizontalAlignment="Stretch" Click="Launch_Click"/>
+          <ui:Button Content="检查更新" Margin="0,8,0,0" HorizontalAlignment="Stretch" Click="CheckUpdate_Click"/>
         </StackPanel>
         <Border/>
       </DockPanel>

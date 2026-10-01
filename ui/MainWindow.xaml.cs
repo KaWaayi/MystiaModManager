@@ -317,6 +317,53 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        SetBusy(true, "正在检查更新…");
+        var restarting = false;
+        try
+        {
+            var offer = await AppUpdater.CheckAsync(SetStatus);
+            if (!AppUpdater.IsNewer(offer.Tag))
+            {
+                SetStatus($"已是最新版本 {AppUpdater.LocalVersionText}");
+                System.Windows.MessageBox.Show(
+                    $"当前已是最新版本 {AppUpdater.LocalVersionText}。",
+                    "检查更新",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var answer = System.Windows.MessageBox.Show(
+                $"发现 {offer.Tag}（当前 {AppUpdater.LocalVersionText}）。\n将从 {offer.Source} 下载并重启管理器。配置目录不会被覆盖。",
+                "检查更新",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Information);
+            if (answer != MessageBoxResult.OK) 
+            {
+                SetStatus("已取消更新");
+                return;
+            }
+
+            var zipPath = Path.Combine(Path.GetTempPath(), "MystiaModManager-update.zip");
+            await AppUpdater.DownloadAsync(offer.Url, zipPath, SetStatus);
+            SetStatus("下载完成，正在重启以完成更新…");
+            AppUpdater.ScheduleReplaceAndRestart(zipPath, AppDomain.CurrentDomain.BaseDirectory);
+            restarting = true;
+            System.Windows.Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show(ex.Message, "更新失败", MessageBoxButton.OK, MessageBoxImage.Error);
+            SetStatus("更新失败");
+        }
+        finally
+        {
+            if (!restarting) SetBusy(false);
+        }
+    }
+
     private async void Launch_Click(object sender, RoutedEventArgs e)
     {
         if (CurrentProfile == null || _settings == null) return;
