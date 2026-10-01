@@ -63,6 +63,6 @@ MystiaModManagerConfig/    # 配置父目录（安装器不覆盖）
 
 ## 第一版范围
 
-已实现：路径探测、多配置、本地 zip/dll 安装、`.dll.off` 启停、BepInEx 构建站安装/更新、Doorstop 钩子、游戏占用保护、GitHub/Gitee 双源下载、检查更新（由旁边的 `MystiaModManager.Update.exe` 下载并覆盖，不调用 PowerShell）、cfg 读写在 Rust 里（界面只负责编辑）。
+已实现：路径探测、多配置、本地 zip/dll 安装、`.dll.off` 启停、BepInEx 构建站安装/更新、Doorstop 钩子、游戏占用保护、GitHub/Gitee 双源下载。检查更新、下载和覆盖都在 `MystiaModManager.Update.exe` 里，界面只负责启动它。cfg 读写在 Rust 里，界面只负责编辑。
 
 未实现：在线模组 JSON、依赖关系。
