@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -67,7 +66,6 @@ public partial class MainWindow : FluentWindow
             }
 
             await ReloadProfilesAsync();
-            await RestoreRelativeDoorstopAsync();
             SetStatus("就绪");
         }
         catch (Exception ex)
@@ -403,7 +401,6 @@ public partial class MainWindow : FluentWindow
             };
             Process.Start(psi);
             SetStatus("游戏已启动");
-            _ = WatchGameAndRestoreDoorstopAsync(gamePath, profilePath);
         }
         catch (Exception ex)
         {
@@ -412,58 +409,6 @@ public partial class MainWindow : FluentWindow
         finally
         {
             SetBusy(false);
-        }
-    }
-
-    private async Task WatchGameAndRestoreDoorstopAsync(string gamePath, string profilePath)
-    {
-        try
-        {
-            await Task.Run(() =>
-            {
-                var sawGame = false;
-                for (var i = 0; i < 120; i++)
-                {
-                    if (CoreApi.IsGameRunning())
-                    {
-                        sawGame = true;
-                        break;
-                    }
-                    Thread.Sleep(500);
-                }
-                if (sawGame)
-                {
-                    while (CoreApi.IsGameRunning())
-                        Thread.Sleep(1000);
-                }
-                CoreApi.WriteDoorstopHook(gamePath, profilePath);
-            });
-        }
-        catch
-        {
-            // The relative hook is also restored the next time the manager starts.
-        }
-    }
-
-    private async Task RestoreRelativeDoorstopAsync()
-    {
-        if (_settings == null || _configRoot == null) return;
-        if (string.IsNullOrEmpty(_settings.CurrentProfile)) return;
-        if (CoreApi.IsGameRunning()) return;
-        var game = _settings.GamePath;
-        var profile = _settings.CurrentProfile;
-        var root = _configRoot;
-        try
-        {
-            await Task.Run(() =>
-            {
-                var path = CoreApi.ProfilePath(root, profile);
-                CoreApi.WriteDoorstopHook(game, path);
-            });
-        }
-        catch
-        {
-            // No BepInEx in the profile yet.
         }
     }
 
