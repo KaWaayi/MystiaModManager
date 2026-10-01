@@ -58,7 +58,7 @@ MystiaModManagerConfig/    # 配置父目录（安装器不覆盖）
 
 ## 启动行为
 
-- **从管理器启动**：覆盖游戏目录 `winhttp.dll`，并用 Doorstop 命令行绝对路径加载当前配置（含 IL2CPP `coreclr`）。
+- **从管理器启动**：覆盖游戏目录 `winhttp.dll`，并把 `doorstop_config.ini` 写成当前配置的绝对路径。不附加命令行参数，避免 Steam 每次弹出「用自定义参数启动游戏」。游戏退出后改回相对路径。
 - **从 Steam 直接启动**：游戏目录里的 `doorstop_config.ini` 使用相对路径；若游戏目录下没有 `BepInEx`，则保持原版。若你本机游戏目录里已有一份 BepInEx，Steam 仍会加载那一份（管理器不会移动它）。
 
 ## 第一版范围

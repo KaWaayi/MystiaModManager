@@ -49,27 +49,13 @@ pub struct LaunchInfo {
 }
 
 pub fn write_game_doorstop_hook(game_path: &Path, profile: &Path) -> Result<()> {
-    if !game_path.join(GAME_EXE).is_file() {
-        return Err(AppError::msg("游戏目录无效"));
-    }
-    let winhttp_src = profile.join("winhttp.dll");
-    if !winhttp_src.is_file() {
-        return Err(AppError::msg("配置中缺少 winhttp.dll，请先安装 BepInEx"));
-    }
-    std::fs::copy(&winhttp_src, game_path.join("winhttp.dll"))?;
+    install_proxy(game_path, profile)?;
     std::fs::write(game_path.join("doorstop_config.ini"), DOORSTOP_INI_RELATIVE)?;
-
-    let ver_src = profile.join(".doorstop_version");
-    if ver_src.is_file() {
-        std::fs::copy(&ver_src, game_path.join(".doorstop_version"))?;
-    } else {
-        std::fs::write(game_path.join(".doorstop_version"), "4.4.0")?;
-    }
     Ok(())
 }
 
 pub fn prepare_launch(game_path: &Path, profile: &Path) -> Result<LaunchInfo> {
-    write_game_doorstop_hook(game_path, profile)?;
+    install_proxy(game_path, profile)?;
 
     let target = profile
         .join("BepInEx")
@@ -84,26 +70,47 @@ pub fn prepare_launch(game_path: &Path, profile: &Path) -> Result<LaunchInfo> {
     }
     let corlib = profile.join("dotnet");
 
-    let target_s = abs_str(&target)?;
-    let coreclr_s = abs_str(&coreclr)?;
-    let corlib_s = abs_str(&corlib)?;
+    let ini = absolute_ini(&abs_str(&target)?, &abs_str(&coreclr)?, &abs_str(&corlib)?);
+    std::fs::write(game_path.join("doorstop_config.ini"), ini)?;
 
-    let args = vec![
-        "--doorstop-enabled".into(),
-        "true".into(),
-        "--doorstop-target-assembly".into(),
-        target_s,
-        "--doorstop-clr-runtime-coreclr-path".into(),
-        coreclr_s,
-        "--doorstop-clr-corlib-dir".into(),
-        corlib_s,
-    ];
-
+    // No command-line arguments. Steam asks every time a game starts with extra args,
+    // and "Continue" is not remembered.
     Ok(LaunchInfo {
         exe_path: game_path.join(GAME_EXE).to_string_lossy().to_string(),
         working_directory: game_path.to_string_lossy().to_string(),
-        arguments: args,
+        arguments: Vec::new(),
     })
+}
+
+fn install_proxy(game_path: &Path, profile: &Path) -> Result<()> {
+    if !game_path.join(GAME_EXE).is_file() {
+        return Err(AppError::msg("游戏目录无效"));
+    }
+    let winhttp_src = profile.join("winhttp.dll");
+    if !winhttp_src.is_file() {
+        return Err(AppError::msg("配置中缺少 winhttp.dll，请先安装 BepInEx"));
+    }
+    std::fs::copy(&winhttp_src, game_path.join("winhttp.dll"))?;
+    let ver_src = profile.join(".doorstop_version");
+    if ver_src.is_file() {
+        std::fs::copy(&ver_src, game_path.join(".doorstop_version"))?;
+    } else {
+        std::fs::write(game_path.join(".doorstop_version"), "4.4.0")?;
+    }
+    Ok(())
+}
+
+fn absolute_ini(target: &str, coreclr: &str, corlib: &str) -> String {
+    DOORSTOP_INI_RELATIVE
+        .replace(
+            r"target_assembly = BepInEx\core\BepInEx.Unity.IL2CPP.dll",
+            &format!("target_assembly = {target}"),
+        )
+        .replace(
+            r"coreclr_path = dotnet\coreclr.dll",
+            &format!("coreclr_path = {coreclr}"),
+        )
+        .replace("corlib_dir = dotnet", &format!("corlib_dir = {corlib}"))
 }
 
 fn abs_str(p: &Path) -> Result<String> {
