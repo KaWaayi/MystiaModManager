@@ -1,0 +1,61 @@
+<Window x:Class="MystiaModManager.Setup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="夜雀食堂模组管理器 - 安装"
+        Height="420" Width="680"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <TextBlock TextWrapping="Wrap" Margin="0,0,0,16"
+               Text="确认路径后，将从 GitHub Release 下载管理器并解压到管理器目录，然后启动。配置目录不会被覆盖。"/>
+
+    <Grid Grid.Row="1" Margin="0,0,0,8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="110"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="游戏目录" VerticalAlignment="Center"/>
+      <TextBox x:Name="GamePathBox" Grid.Column="1" Margin="8,0"/>
+      <ui:Button Content="浏览" Grid.Column="2" Click="BrowseGame_Click"/>
+    </Grid>
+
+    <Grid Grid.Row="2" Margin="0,0,0,8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="110"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="管理器目录" VerticalAlignment="Center"/>
+      <TextBox x:Name="ManagerPathBox" Grid.Column="1" Margin="8,0"/>
+      <ui:Button Content="浏览" Grid.Column="2" Click="BrowseManager_Click"/>
+    </Grid>
+
+    <Grid Grid.Row="3" Margin="0,0,0,8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="110"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="配置目录" VerticalAlignment="Center"/>
+      <TextBox x:Name="ConfigPathBox" Grid.Column="1" Margin="8,0"/>
+      <ui:Button Content="浏览" Grid.Column="2" Click="BrowseConfig_Click"/>
+    </Grid>
+
+    <TextBlock x:Name="StatusText" Grid.Row="4" TextWrapping="Wrap" VerticalAlignment="Top" Opacity="0.8"/>
+
+    <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+      <ui:Button Content="安装并启动" Appearance="Primary" Click="Install_Click" x:Name="InstallButton"/>
+    </StackPanel>
+  </Grid>
+</Window>

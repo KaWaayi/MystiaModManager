@@ -1,0 +1,24 @@
+<Window x:Class="MystiaModManager.FirstRunWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="选择 BepInEx 构建"
+        Height="420" Width="560"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <TextBlock TextWrapping="Wrap" Margin="0,0,0,12"
+               Text="仅列出 Unity IL2CPP Windows x64 的 6.x 构建。默认选最新。新建或更新配置时从 builds.bepinex.dev 下载。"/>
+    <ListBox x:Name="BuildList" Grid.Row="1" DisplayMemberPath="Display"/>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <ui:Button Content="刷新列表" Click="Refresh_Click" Margin="0,0,8,0"/>
+      <ui:Button Content="取消" Click="Cancel_Click" Margin="0,0,8,0"/>
+      <ui:Button Content="确定" Appearance="Primary" Click="Ok_Click"/>
+    </StackPanel>
+  </Grid>
+</Window>

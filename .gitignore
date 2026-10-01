@@ -1,0 +1,9 @@
+/rust/target/
+/ui/bin/
+/ui/obj/
+/setup/bin/
+/setup/obj/
+/dist/
+*.pdb
+.vs/
+**/NativeMethods.g.cs

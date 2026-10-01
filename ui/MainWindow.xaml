@@ -1,0 +1,86 @@
+<ui:FluentWindow x:Class="MystiaModManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="夜雀食堂模组管理器"
+        Height="640" Width="960"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        WindowStartupLocation="CenterScreen">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <ui:TitleBar Title="夜雀食堂模组管理器" Grid.Row="0"/>
+
+    <Grid Grid.Row="1" Margin="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="280"/>
+        <ColumnDefinition Width="16"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- Profiles -->
+      <DockPanel Grid.Column="0">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="配置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+          <ComboBox x:Name="ProfileCombo" DisplayMemberPath="Name" SelectionChanged="ProfileCombo_OnSelectionChanged"/>
+          <UniformGrid Columns="2" Margin="0,8,0,0">
+            <ui:Button Content="新建" Appearance="Primary" Margin="0,0,4,4" Click="CreateProfile_Click"/>
+            <ui:Button Content="更新框架" Margin="4,0,0,4" Click="UpdateFramework_Click"/>
+            <ui:Button Content="重命名" Margin="0,0,4,0" Click="RenameProfile_Click"/>
+            <ui:Button Content="删除" Appearance="Danger" Margin="4,0,0,0" Click="DeleteProfile_Click"/>
+          </UniformGrid>
+        </StackPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+          <TextBlock x:Name="PathHint" TextWrapping="Wrap" Opacity="0.7" FontSize="12"/>
+          <ui:Button Content="启动游戏（模组）" Appearance="Primary" Margin="0,8,0,0" HorizontalAlignment="Stretch" Click="Launch_Click"/>
+        </StackPanel>
+        <Border/>
+      </DockPanel>
+
+      <!-- Mods -->
+      <DockPanel Grid.Column="2">
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+          <TextBlock Text="已安装模组" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <ui:Button Content="安装本地模组" Appearance="Primary" Click="InstallMod_Click" Margin="0,0,8,0"/>
+            <ui:Button Content="刷新" Click="Refresh_Click"/>
+          </StackPanel>
+        </DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+          <ui:Button Content="启用" Click="EnableMod_Click" Margin="0,0,8,0"/>
+          <ui:Button Content="停用" Click="DisableMod_Click" Margin="0,0,8,0"/>
+          <ui:Button Content="卸载" Appearance="Danger" Click="UninstallMod_Click"/>
+        </StackPanel>
+        <DataGrid x:Name="ModsGrid"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  SelectionMode="Single"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="*"/>
+            <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="80"/>
+            <DataGridTextColumn Header="DLL" Binding="{Binding DllCount}" Width="60"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </DockPanel>
+    </Grid>
+
+    <StatusBar Grid.Row="2" Padding="12,6">
+      <TextBlock x:Name="StatusText" Text="就绪"/>
+    </StatusBar>
+
+    <Border x:Name="BusyOverlay" Grid.RowSpan="3" Background="#88000000" Visibility="Collapsed">
+      <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+        <ui:ProgressRing IsIndeterminate="True" Width="48" Height="48"/>
+        <TextBlock x:Name="BusyText" Text="处理中…" Foreground="White" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</ui:FluentWindow>
