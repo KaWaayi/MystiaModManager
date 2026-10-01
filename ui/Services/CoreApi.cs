@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MystiaModManager.Models;
 using MystiaModManager.Native;
 using Newtonsoft.Json;
@@ -67,4 +68,17 @@ public static class CoreApi
 
     public static string ProfilePath(string configRoot, string name)
         => NativeMethods.Call(() => NativeMethods.ProfilePath(configRoot, name)).ToObject<string>()!;
+
+    public static List<string> ListCfgFiles(string profilePath)
+        => NativeMethods.Call(() => NativeMethods.ListCfgFiles(profilePath)).ToObject<List<string>>()!;
+
+    public static List<CfgSetting> LoadCfg(string profilePath, string fileName)
+        => NativeMethods.Call(() => NativeMethods.LoadCfg(profilePath, fileName)).ToObject<List<CfgSetting>>()!;
+
+    public static void SaveCfg(string profilePath, string fileName, IEnumerable<CfgSetting> settings)
+    {
+        var updates = settings.Select(s => new { line_index = s.LineIndex, value = s.Value });
+        var json = JsonConvert.SerializeObject(updates);
+        NativeMethods.Call(() => NativeMethods.SaveCfg(profilePath, fileName, json));
+    }
 }

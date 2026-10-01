@@ -70,6 +70,15 @@ internal static class NativeMethods
     [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr mystia_profile_path(IntPtr configRoot, IntPtr name);
 
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mystia_list_cfg_files(IntPtr profilePath);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mystia_load_cfg(IntPtr profilePath, IntPtr fileName);
+
+    [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr mystia_save_cfg(IntPtr profilePath, IntPtr fileName, IntPtr updatesJson);
+
     private static IntPtr AllocUtf8(string? value)
     {
         value ??= "";
@@ -233,6 +242,30 @@ internal static class NativeMethods
         var b = AllocUtf8(profilePath);
         try { return mystia_prepare_launch(a, b); }
         finally { Free(a); Free(b); }
+    }
+
+    public static IntPtr ListCfgFiles(string profilePath)
+    {
+        var p = AllocUtf8(profilePath);
+        try { return mystia_list_cfg_files(p); }
+        finally { Free(p); }
+    }
+
+    public static IntPtr LoadCfg(string profilePath, string fileName)
+    {
+        var a = AllocUtf8(profilePath);
+        var b = AllocUtf8(fileName);
+        try { return mystia_load_cfg(a, b); }
+        finally { Free(a); Free(b); }
+    }
+
+    public static IntPtr SaveCfg(string profilePath, string fileName, string updatesJson)
+    {
+        var a = AllocUtf8(profilePath);
+        var b = AllocUtf8(fileName);
+        var c = AllocUtf8(updatesJson);
+        try { return mystia_save_cfg(a, b, c); }
+        finally { Free(a); Free(b); Free(c); }
     }
 
     public static IntPtr ProfilePath(string configRoot, string name)

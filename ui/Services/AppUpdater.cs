@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -75,70 +74,24 @@ internal static class AppUpdater
         return PickZip(gitee, "Gitee");
     }
 
-    public static async Task DownloadAsync(string url, string destPath, Action<string>? progress)
+    public static void StartUpdater(string downloadUrl, string managerDir)
     {
-        using var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("MystiaModManager/" + LocalVersionText);
-        http.Timeout = TimeSpan.FromMinutes(10);
-        progress?.Invoke("正在下载更新…");
-        using var resp = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-        resp.EnsureSuccessStatusCode();
-        using (var network = await resp.Content.ReadAsStreamAsync())
-        using (var file = File.Create(destPath))
-        {
-            var buffer = new byte[81920];
-            long total = 0;
-            while (true)
-            {
-                int read = await network.ReadAsync(buffer, 0, buffer.Length);
-                if (read <= 0) break;
-                await file.WriteAsync(buffer, 0, read);
-                total += read;
-                if (total % (512 * 1024) < read)
-                    progress?.Invoke($"正在下载更新… {total / 1024} KB");
-            }
-            if (total == 0) throw new InvalidOperationException("下载内容为空");
-        }
-    }
-
-    public static void ScheduleReplaceAndRestart(string zipPath, string managerDir)
-    {
-        var ps1 = Path.Combine(Path.GetTempPath(), "MystiaModManager-update.ps1");
-        var script = """
-            $ErrorActionPreference = 'Stop'
-            Start-Sleep -Seconds 2
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            $zip = [System.IO.Compression.ZipFile]::OpenRead($env:MYSTIA_UPDATE_ZIP)
-            try {
-              foreach ($entry in $zip.Entries) {
-                if ([string]::IsNullOrEmpty($entry.Name)) { continue }
-                $rel = $entry.FullName.Replace('/', '\')
-                if ($rel -eq 'bootstrap.json') { continue }
-                $dest = Join-Path $env:MYSTIA_UPDATE_DIR $rel
-                $parent = Split-Path $dest -Parent
-                if ($parent) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
-                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $dest, $true)
-              }
-            } finally {
-              $zip.Dispose()
-            }
-            $exe = Join-Path $env:MYSTIA_UPDATE_DIR 'MystiaModManager.exe'
-            Start-Process -FilePath $exe -WorkingDirectory $env:MYSTIA_UPDATE_DIR
-            """;
-        File.WriteAllText(ps1, script, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-
+        var updater = Path.Combine(managerDir, "MystiaModManager.Update.exe");
+        if (!File.Exists(updater))
+            throw new InvalidOperationException("缺少 MystiaModManager.Update.exe，请重新运行安装器。");
+        var temp = Path.Combine(Path.GetTempPath(), "MystiaModManager.Update.exe");
+        File.Copy(updater, temp, true);
         var psi = new ProcessStartInfo
         {
-            FileName = "powershell.exe",
-            Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{ps1}\"",
+            FileName = temp,
+            Arguments = "--pid " + Process.GetCurrentProcess().Id
+                + " --dir \"" + managerDir.TrimEnd('\\') + "\""
+                + " --url \"" + downloadUrl + "\"",
             UseShellExecute = false,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
+            WorkingDirectory = Path.GetTempPath()
         };
-        psi.EnvironmentVariables["MYSTIA_UPDATE_ZIP"] = zipPath;
-        psi.EnvironmentVariables["MYSTIA_UPDATE_DIR"] = managerDir;
         if (Process.Start(psi) == null)
-            throw new InvalidOperationException("无法启动更新进程");
+            throw new InvalidOperationException("无法启动更新程序");
     }
 
     private static async Task<JObject> FetchAsync(HttpClient http, string url, int timeoutSeconds)

@@ -1,4 +1,5 @@
 pub mod bepinex;
+pub mod cfg;
 pub mod doorstop;
 pub mod error;
 pub mod ffi;

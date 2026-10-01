@@ -334,6 +334,57 @@ pub extern "C" fn mystia_is_game_running() -> bool {
 }
 
 #[no_mangle]
+pub extern "C" fn mystia_list_cfg_files(profile_path: *const c_char) -> *mut c_char {
+    let profile = match cstr_to_str(profile_path) {
+        Ok(s) => s,
+        Err(e) => return err_json(e),
+    };
+    match crate::cfg::list_cfg_files(Path::new(profile)) {
+        Ok(v) => ok_json(v),
+        Err(e) => err_json(e),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mystia_load_cfg(profile_path: *const c_char, file_name: *const c_char) -> *mut c_char {
+    let (profile, file) = match (cstr_to_str(profile_path), cstr_to_str(file_name)) {
+        (Ok(a), Ok(b)) => (a, b),
+        (Err(e), _) | (_, Err(e)) => return err_json(e),
+    };
+    match crate::cfg::load_cfg(Path::new(profile), file) {
+        Ok(v) => ok_json(v),
+        Err(e) => err_json(e),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn mystia_save_cfg(
+    profile_path: *const c_char,
+    file_name: *const c_char,
+    updates_json: *const c_char,
+) -> *mut c_char {
+    if let Err(e) = crate::process::ensure_game_not_running() {
+        return err_json(e);
+    }
+    let (profile, file, json) = match (
+        cstr_to_str(profile_path),
+        cstr_to_str(file_name),
+        cstr_to_str(updates_json),
+    ) {
+        (Ok(a), Ok(b), Ok(c)) => (a, b, c),
+        (Err(e), _, _) | (_, Err(e), _) | (_, _, Err(e)) => return err_json(e),
+    };
+    let updates: Vec<crate::cfg::CfgUpdate> = match serde_json::from_str(json) {
+        Ok(v) => v,
+        Err(e) => return err_json(e),
+    };
+    match crate::cfg::save_cfg(Path::new(profile), file, &updates) {
+        Ok(()) => ok_json(true),
+        Err(e) => err_json(e),
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn mystia_profile_path(
     config_root: *const c_char,
     name: *const c_char,

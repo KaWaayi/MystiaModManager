@@ -358,10 +358,8 @@ public partial class MainWindow : FluentWindow
                 return;
             }
 
-            var zipPath = Path.Combine(Path.GetTempPath(), "MystiaModManager-update.zip");
-            await AppUpdater.DownloadAsync(offer.Url, zipPath, SetStatus);
-            SetStatus("下载完成，正在重启以完成更新…");
-            AppUpdater.ScheduleReplaceAndRestart(zipPath, AppDomain.CurrentDomain.BaseDirectory);
+            SetStatus("正在启动更新程序…");
+            AppUpdater.StartUpdater(offer.Url, AppDomain.CurrentDomain.BaseDirectory);
             restarting = true;
             System.Windows.Application.Current.Shutdown();
         }

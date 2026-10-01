@@ -47,6 +47,20 @@ public sealed class ModInfo
     [JsonProperty("dll_count")] public int DllCount { get; set; }
 }
 
+public sealed class CfgSetting
+{
+    [JsonProperty("section")] public string Section { get; set; } = "";
+    [JsonProperty("key")] public string Key { get; set; } = "";
+    [JsonProperty("value")] public string Value { get; set; } = "";
+    [JsonProperty("original")] public string Original { get; set; } = "";
+    [JsonProperty("description")] public string Description { get; set; } = "";
+    [JsonProperty("type_name")] public string TypeName { get; set; } = "";
+    [JsonProperty("default_value")] public string DefaultValue { get; set; } = "";
+    [JsonProperty("hint")] public string Hint { get; set; } = "";
+    [JsonProperty("options")] public List<string> Options { get; set; } = new();
+    [JsonProperty("line_index")] public int LineIndex { get; set; }
+}
+
 public sealed class LaunchInfo
 {
     [JsonProperty("exe_path")] public string ExePath { get; set; } = "";
