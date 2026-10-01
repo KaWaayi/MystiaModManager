@@ -63,6 +63,6 @@ MystiaModManagerConfig/    # 配置父目录（安装器不覆盖）
 
 ## 第一版范围
 
-已实现：路径探测、多配置、本地 zip/dll 安装、`.dll.off` 启停、BepInEx 构建站安装/更新、Doorstop 钩子、游戏占用保护、GitHub/Gitee 双源下载、管理器内检查更新（同样先 GitHub，超时或失败再 Gitee）。
+已实现：路径探测、多配置、本地 zip/dll 安装、`.dll.off` 启停、BepInEx 构建站安装/更新、Doorstop 钩子、游戏占用保护、GitHub/Gitee 双源下载、管理器内检查更新、当前配置的 cfg 编辑（保留注释）。
 
-未实现：在线模组 JSON、依赖关系、cfg 编辑器。
+未实现：在线模组 JSON、依赖关系。

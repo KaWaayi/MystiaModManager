@@ -1,0 +1,41 @@
+<Window x:Class="MystiaModManager.ConfigEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="编辑配置"
+        Height="560" Width="880"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="240"/>
+      <ColumnDefinition Width="12"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <TextBlock Grid.ColumnSpan="3" TextWrapping="Wrap" Margin="0,0,0,12"
+               Text="这里只改当前配置目录里的 cfg。保存时保留原有注释。游戏运行中不能保存。"/>
+
+    <DockPanel Grid.Row="1">
+      <TextBlock DockPanel.Dock="Top" Text="配置文件" FontWeight="SemiBold" Margin="0,0,0,8"/>
+      <ListBox x:Name="FileList" SelectionChanged="FileList_OnSelectionChanged"/>
+    </DockPanel>
+
+    <DockPanel Grid.Row="1" Grid.Column="2">
+      <TextBlock x:Name="FileTitle" DockPanel.Dock="Top" Text="选择左侧文件" FontWeight="SemiBold" Margin="0,0,0,8"/>
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="EditorPanel"/>
+      </ScrollViewer>
+    </DockPanel>
+
+    <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+      <ui:Button Content="关闭" Click="Close_Click" Margin="0,0,8,0"/>
+      <ui:Button Content="保存" Appearance="Primary" Click="Save_Click"/>
+    </StackPanel>
+  </Grid>
+</Window>

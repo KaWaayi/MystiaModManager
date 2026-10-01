@@ -55,7 +55,8 @@
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
           <ui:Button Content="启用" Click="EnableMod_Click" Margin="0,0,8,0"/>
           <ui:Button Content="停用" Click="DisableMod_Click" Margin="0,0,8,0"/>
-          <ui:Button Content="卸载" Appearance="Danger" Click="UninstallMod_Click"/>
+          <ui:Button Content="卸载" Appearance="Danger" Click="UninstallMod_Click" Margin="0,0,8,0"/>
+          <ui:Button Content="编辑配置" Click="EditConfig_Click"/>
         </StackPanel>
         <DataGrid x:Name="ModsGrid"
                   AutoGenerateColumns="False"

@@ -364,6 +364,13 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    private void EditConfig_Click(object sender, RoutedEventArgs e)
+    {
+        if (CurrentProfile == null) return;
+        var win = new ConfigEditorWindow(CurrentProfile.Path) { Owner = this };
+        win.ShowDialog();
+    }
+
     private async void Launch_Click(object sender, RoutedEventArgs e)
     {
         if (CurrentProfile == null || _settings == null) return;
