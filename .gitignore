@@ -3,6 +3,8 @@
 /ui/obj/
 /setup/bin/
 /setup/obj/
+/updater/bin/
+/updater/obj/
 /dist/
 *.pdb
 .vs/
