@@ -6,8 +6,8 @@
 
 | 角色 | 地址 |
 | --- | --- |
-| 主仓库 | GitHub：`wjjnb666/MystiaModManager`（可按实际账号调整） |
-| 备用 | Gitee：同名仓库，作 backup |
+| 主仓库 | GitHub：https://github.com/KaWaayi/MystiaModManager |
+| 备用 | Gitee：https://gitee.com/wjjnb666/MystiaModManager |
 
 安装器下载管理器本体时：**先试 GitHub**（约 15 秒连不上或迟迟无数据则放弃），**自动切到 Gitee**。可用环境变量覆盖：
 

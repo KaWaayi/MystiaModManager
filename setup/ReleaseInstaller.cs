@@ -14,7 +14,7 @@ internal static class ReleaseInstaller
 {
     // Primary: GitHub. Backup: Gitee. Override with env vars if needed.
     private static string GitHubRepo =>
-        Environment.GetEnvironmentVariable("MYSTIA_GITHUB_REPO") ?? "wjjnb666/MystiaModManager";
+        Environment.GetEnvironmentVariable("MYSTIA_GITHUB_REPO") ?? "KaWaayi/MystiaModManager";
 
     private static string GiteeRepo =>
         Environment.GetEnvironmentVariable("MYSTIA_GITEE_REPO") ?? "wjjnb666/MystiaModManager";
