@@ -163,8 +163,9 @@ public partial class MainWindow : FluentWindow
         try
         {
             var build = buildWin.SelectedBuild;
+            var profileName = nameWin.Value;
             var name = await Task.Run(() =>
-                CoreApi.CreateProfile(_configRoot!, nameWin.Value, build.Url, build.Version));
+                CoreApi.CreateProfile(_configRoot!, profileName, build.Url, build.Version));
             _settings!.CurrentProfile = name;
             CoreApi.SaveManager(_configRoot!, _settings);
             var profilePath = CoreApi.ProfilePath(_configRoot!, name);
@@ -191,9 +192,11 @@ public partial class MainWindow : FluentWindow
         try
         {
             var build = buildWin.SelectedBuild;
+            var profilePath = CurrentProfile.Path;
+            var gamePath = _settings!.GamePath;
             await Task.Run(() =>
-                CoreApi.UpdateBepInEx(CurrentProfile.Path, build.Url, build.Version));
-            await Task.Run(() => CoreApi.WriteDoorstopHook(_settings!.GamePath, CurrentProfile.Path));
+                CoreApi.UpdateBepInEx(profilePath, build.Url, build.Version));
+            await Task.Run(() => CoreApi.WriteDoorstopHook(gamePath, profilePath));
             await ReloadProfilesAsync();
             SetStatus($"框架已更新到 {build.Version}");
         }
@@ -214,8 +217,10 @@ public partial class MainWindow : FluentWindow
         if (dlg.ShowDialog() != true) return;
         try
         {
+            var oldName = CurrentProfile.Name;
+            var requested = dlg.Value;
             var newName = await Task.Run(() =>
-                CoreApi.RenameProfile(_configRoot!, CurrentProfile.Name, dlg.Value));
+                CoreApi.RenameProfile(_configRoot!, oldName, requested));
             _settings!.CurrentProfile = newName;
             CoreApi.SaveManager(_configRoot!, _settings);
             await ReloadProfilesAsync();
@@ -234,7 +239,8 @@ public partial class MainWindow : FluentWindow
             return;
         try
         {
-            await Task.Run(() => CoreApi.DeleteProfile(_configRoot!, CurrentProfile.Name));
+            var profileName = CurrentProfile.Name;
+            await Task.Run(() => CoreApi.DeleteProfile(_configRoot!, profileName));
             _settings!.CurrentProfile = "";
             CoreApi.SaveManager(_configRoot!, _settings);
             await ReloadProfilesAsync();
@@ -254,11 +260,13 @@ public partial class MainWindow : FluentWindow
             Title = "选择本地模组"
         };
         if (ofd.ShowDialog() != true) return;
+        var profilePath = CurrentProfile.Path;
+        var sourcePath = ofd.FileName;
         SetBusy(true, "正在安装模组…");
         try
         {
-            var name = await Task.Run(() => CoreApi.InstallMod(CurrentProfile.Path, ofd.FileName));
-            await ReloadModsAsync(CurrentProfile.Path);
+            var name = await Task.Run(() => CoreApi.InstallMod(profilePath, sourcePath));
+            await ReloadModsAsync(profilePath);
             SetStatus($"已安装 {name}");
         }
         catch (Exception ex)
@@ -288,10 +296,12 @@ public partial class MainWindow : FluentWindow
     {
         if (CurrentProfile == null) return;
         if (ModsGrid.SelectedItem is not ModRow row) return;
+        var profilePath = CurrentProfile.Path;
+        var modName = row.Name;
         try
         {
-            await Task.Run(() => CoreApi.SetModEnabled(CurrentProfile.Path, row.Name, enabled));
-            await ReloadModsAsync(CurrentProfile.Path);
+            await Task.Run(() => CoreApi.SetModEnabled(profilePath, modName, enabled));
+            await ReloadModsAsync(profilePath);
         }
         catch (Exception ex)
         {
@@ -306,10 +316,12 @@ public partial class MainWindow : FluentWindow
         if (System.Windows.MessageBox.Show($"卸载模组「{row.Name}」？", "确认",
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
+        var profilePath = CurrentProfile.Path;
+        var modName = row.Name;
         try
         {
-            await Task.Run(() => CoreApi.UninstallMod(CurrentProfile.Path, row.Name));
-            await ReloadModsAsync(CurrentProfile.Path);
+            await Task.Run(() => CoreApi.UninstallMod(profilePath, modName));
+            await ReloadModsAsync(profilePath);
         }
         catch (Exception ex)
         {
@@ -374,11 +386,13 @@ public partial class MainWindow : FluentWindow
     private async void Launch_Click(object sender, RoutedEventArgs e)
     {
         if (CurrentProfile == null || _settings == null) return;
+        var gamePath = _settings.GamePath;
+        var profilePath = CurrentProfile.Path;
         SetBusy(true, "正在准备启动…");
         try
         {
             var info = await Task.Run(() =>
-                CoreApi.PrepareLaunch(_settings.GamePath, CurrentProfile.Path));
+                CoreApi.PrepareLaunch(gamePath, profilePath));
             var args = string.Join(" ", info.Arguments.Select(QuoteArg));
             var psi = new ProcessStartInfo
             {
