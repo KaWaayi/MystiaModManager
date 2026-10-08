@@ -19,16 +19,11 @@ Pop-Location
 
 Copy-Item "$root\rust\target\release\mystia_core.dll" "$root\ui\bin\Release\mystia_core.dll" -Force
 
-Write-Host "== Updater ==" -ForegroundColor Cyan
-Push-Location "$root\updater"
-dotnet build -c Release
-Pop-Location
-Copy-Item "$root\updater\bin\Release\MystiaModManager.Update.exe" "$root\ui\bin\Release\MystiaModManager.Update.exe" -Force
-
 Write-Host "== Setup ==" -ForegroundColor Cyan
 Push-Location "$root\setup"
 dotnet build -c Release
 Pop-Location
+Copy-Item "$root\setup\bin\Release\MystiaModManager.Setup.exe" "$root\ui\bin\Release\MystiaModManager.Update.exe" -Force
 
 # Package zip for GitHub / Gitee Release (manager runtime only)
 $pkg = "$root\dist"
@@ -43,6 +38,7 @@ $names = @(
   "MystiaModManager.exe.config",
   "MystiaModManager.Update.exe",
   "mystia_core.dll",
+  "Izakaya.Rules.dll",
   "Newtonsoft.Json.dll",
   "System.Buffers.dll",
   "System.Memory.dll",

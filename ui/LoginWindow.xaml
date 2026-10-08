@@ -1,0 +1,26 @@
+<Window x:Class="MystiaModManager.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="登录"
+        Height="240" Width="360"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="White">
+  <Grid Margin="16">
+    <StackPanel x:Name="FormPanel">
+      <TextBlock Text="用户名"/>
+      <TextBox x:Name="UserBox" Margin="0,4,0,10"/>
+      <TextBlock Text="密码"/>
+      <PasswordBox x:Name="PasswordBox" Margin="0,4,0,14"/>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button Content="注册" Padding="12,4" Margin="0,0,8,0" Click="Register_Click"/>
+        <Button Content="登录" Padding="12,4" IsDefault="True" Click="Login_Click"/>
+      </StackPanel>
+    </StackPanel>
+    <StackPanel x:Name="LoggedPanel" Visibility="Collapsed">
+      <TextBlock Text="已登录" FontSize="16" FontWeight="SemiBold"/>
+      <TextBlock Text="退出后，订阅、上传和下载需要重新登录。" TextWrapping="Wrap" Margin="0,8,0,16" Foreground="#667085"/>
+      <Button Content="退出登录" HorizontalAlignment="Left" Padding="12,4" Click="Logout_Click"/>
+    </StackPanel>
+  </Grid>
+</Window>

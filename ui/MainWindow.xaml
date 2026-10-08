@@ -3,11 +3,67 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="夜雀食堂模组管理器"
-        Height="640" Width="960"
+        Height="760" Width="1180"
+        Background="White"
+        Foreground="#1A1A1A"
         ExtendsContentIntoTitleBar="True"
-        WindowBackdropType="Mica"
+        WindowBackdropType="None"
         WindowStartupLocation="CenterScreen">
-  <Grid>
+  <ui:FluentWindow.Resources>
+    <SolidColorBrush x:Key="NavSelected" Color="#4C6FFF"/>
+    <Style x:Key="NavButton" TargetType="Button">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#1A1A1A"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Padding" Value="12,8"/>
+      <Setter Property="Margin" Value="8,2"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+              <ContentPresenter/>
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="#EEF1F6"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="IosSwitch" TargetType="ToggleButton">
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="Cursor" Value="Hand"/>
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ToggleButton">
+            <Grid Width="46" Height="28">
+              <Border x:Name="Track" CornerRadius="14" Background="#E5E5EA"/>
+              <Border x:Name="Knob" Width="24" Height="24" CornerRadius="12" Background="White"
+                      HorizontalAlignment="Left" Margin="2,0,0,0" VerticalAlignment="Center">
+                <Border.Effect>
+                  <DropShadowEffect BlurRadius="4" ShadowDepth="1" Opacity="0.25" Color="#000000"/>
+                </Border.Effect>
+              </Border>
+            </Grid>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsChecked" Value="True">
+                <Setter TargetName="Track" Property="Background" Value="#34C759"/>
+                <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/>
+                <Setter TargetName="Knob" Property="Margin" Value="0,0,2,0"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </ui:FluentWindow.Resources>
+  <Grid Background="White">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
       <RowDefinition Height="*"/>
@@ -16,69 +72,177 @@
 
     <ui:TitleBar Title="夜雀食堂模组管理器" Grid.Row="0"/>
 
-    <Grid Grid.Row="1" Margin="16">
+    <Grid Grid.Row="1">
       <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="280"/>
-        <ColumnDefinition Width="16"/>
+        <ColumnDefinition Width="232"/>
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
 
-      <!-- Profiles -->
-      <DockPanel Grid.Column="0">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-          <TextBlock Text="配置" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
-          <ComboBox x:Name="ProfileCombo" DisplayMemberPath="Name" SelectionChanged="ProfileCombo_OnSelectionChanged"/>
-          <UniformGrid Columns="2" Margin="0,8,0,0">
-            <ui:Button Content="新建" Appearance="Primary" Margin="0,0,4,4" Click="CreateProfile_Click"/>
-            <ui:Button Content="更新框架" Margin="4,0,0,4" Click="UpdateFramework_Click"/>
-            <ui:Button Content="重命名" Margin="0,0,4,0" Click="RenameProfile_Click"/>
-            <ui:Button Content="删除" Appearance="Danger" Margin="4,0,0,0" Click="DeleteProfile_Click"/>
-          </UniformGrid>
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
-          <TextBlock x:Name="PathHint" TextWrapping="Wrap" Opacity="0.7" FontSize="12"/>
-          <ui:Button Content="启动游戏（模组）" Appearance="Primary" Margin="0,8,0,0" HorizontalAlignment="Stretch" Click="Launch_Click"/>
-          <ui:Button Content="检查更新" Margin="0,8,0,0" HorizontalAlignment="Stretch" Click="CheckUpdate_Click"/>
-        </StackPanel>
-        <Border/>
-      </DockPanel>
-
-      <!-- Mods -->
-      <DockPanel Grid.Column="2">
-        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-          <TextBlock Text="已安装模组" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <ui:Button Content="安装本地模组" Appearance="Primary" Click="InstallMod_Click" Margin="0,0,8,0"/>
-            <ui:Button Content="刷新" Click="Refresh_Click"/>
+      <Border Grid.Column="0" Background="White" BorderBrush="#E6E8EC" BorderThickness="0,0,1,0">
+        <DockPanel Margin="8,12,8,8">
+          <StackPanel x:Name="SideTop" DockPanel.Dock="Top">
+            <TextBlock Text="东方夜雀食堂" FontSize="16" FontWeight="SemiBold" Margin="12,4,12,2"/>
+            <TextBlock Text="模组管理" Foreground="#667085" FontSize="12" Margin="12,0,12,16"/>
+            <ui:Button x:Name="LaunchButton" Content="带模组启动" Appearance="Primary" Margin="8,0,8,6" HorizontalAlignment="Stretch" Click="Launch_Click"/>
+            <ui:Button Content="原版启动" Margin="8,0,8,16" HorizontalAlignment="Stretch" Click="VanillaLaunch_Click"/>
+            <TextBlock Text="模组" Foreground="#667085" FontSize="11" Margin="12,0,12,4"/>
+            <Button x:Name="NavInstalled" Style="{StaticResource NavButton}" Tag="installed" Click="Nav_Click">
+              <DockPanel>
+                <Border DockPanel.Dock="Right" Background="#EEF1F4" CornerRadius="8" Padding="6,1" Margin="8,0,0,0">
+                  <TextBlock x:Name="InstalledCount" Text="0" FontSize="11" Foreground="#1A1A1A"/>
+                </Border>
+                <TextBlock Text="已安装" VerticalAlignment="Center"/>
+              </DockPanel>
+            </Button>
+            <Button x:Name="NavOnline" Style="{StaticResource NavButton}" Tag="online" Click="Nav_Click">
+              <DockPanel>
+                <Border DockPanel.Dock="Right" Background="#EEF1F4" CornerRadius="8" Padding="6,1" Margin="8,0,0,0">
+                  <TextBlock x:Name="OnlineCount" Text="—" FontSize="11" Foreground="#1A1A1A"/>
+                </Border>
+                <TextBlock Text="在线" VerticalAlignment="Center"/>
+              </DockPanel>
+            </Button>
+            <TextBlock Text="其他" Foreground="#667085" FontSize="11" Margin="12,14,12,4"/>
+            <Button x:Name="NavConfig" Style="{StaticResource NavButton}" Tag="config" Click="Nav_Click" Content="配置"/>
+            <Button x:Name="NavLog" Style="{StaticResource NavButton}" Tag="log" Click="Nav_Click" Content="游戏日志"/>
+            <Button x:Name="NavSettings" Style="{StaticResource NavButton}" Tag="settings" Click="Nav_Click" Content="设置"/>
+            <TextBlock x:Name="PathHint" TextWrapping="Wrap" Foreground="#667085" FontSize="11" Margin="12,18,12,4"/>
+            <UniformGrid Columns="2" Margin="8,0,8,0">
+              <Button x:Name="LoginButton" Content="登录" Style="{StaticResource NavButton}" Margin="0,2,4,2" Click="Login_Click"/>
+              <Button Content="检查更新" Style="{StaticResource NavButton}" Margin="4,2,0,2" Click="CheckUpdate_Click"/>
+            </UniformGrid>
           </StackPanel>
+          <Grid>
+            <ScrollViewer x:Name="DownloadHost" VerticalAlignment="Bottom" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" MaxHeight="220" Visibility="Collapsed">
+              <ItemsControl x:Name="DownloadList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="#F7F8FA" CornerRadius="8" Padding="10,8" Margin="4,0,4,8">
+                      <StackPanel>
+                        <TextBlock Text="{Binding Title}" FontSize="12" Foreground="#1A1A1A" TextTrimming="CharacterEllipsis"/>
+                        <ProgressBar Height="6" Margin="0,6,0,4" Minimum="0" Maximum="100"
+                                     Value="{Binding Percent, Mode=OneWay}"
+                                     IsIndeterminate="{Binding Unknown, Mode=OneWay}"
+                                     Foreground="#4C6FFF" Background="#E6E8EC" BorderThickness="0"/>
+                        <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="#667085"/>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </Grid>
         </DockPanel>
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-          <ui:Button Content="启用" Click="EnableMod_Click" Margin="0,0,8,0"/>
-          <ui:Button Content="停用" Click="DisableMod_Click" Margin="0,0,8,0"/>
-          <ui:Button Content="卸载" Appearance="Danger" Click="UninstallMod_Click" Margin="0,0,8,0"/>
-          <ui:Button Content="编辑配置" Click="EditConfig_Click"/>
-        </StackPanel>
-        <DataGrid x:Name="ModsGrid"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  CanUserAddRows="False"
-                  SelectionMode="Single"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal">
-          <DataGrid.Columns>
-            <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="*"/>
-            <DataGridTextColumn Header="状态" Binding="{Binding StatusText}" Width="80"/>
-            <DataGridTextColumn Header="DLL" Binding="{Binding DllCount}" Width="60"/>
-          </DataGrid.Columns>
-        </DataGrid>
-      </DockPanel>
+      </Border>
+
+      <Grid Grid.Column="1" Background="White">
+        <Grid Margin="16,12,16,12">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,12">
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <ui:Button Content="新建" Margin="0,0,6,0" Click="CreateProfile_Click"/>
+            <ui:Button Content="重命名" Margin="0,0,6,0" Click="RenameProfile_Click"/>
+            <ui:Button Content="删除" Background="White" Foreground="#D1242F" BorderBrush="#D1242F" Margin="0,0,6,0" Click="DeleteProfile_Click"/>
+            <ui:Button Content="更新框架" Click="UpdateFramework_Click"/>
+          </StackPanel>
+          <ComboBox x:Name="ProfileCombo" DisplayMemberPath="Name" MinWidth="220" HorizontalAlignment="Left" VerticalAlignment="Center" SelectionChanged="ProfileCombo_OnSelectionChanged"/>
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+          <DockPanel x:Name="InstalledPage">
+            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <ui:Button Content="安装本地模组" Appearance="Primary" Click="InstallMod_Click" Margin="8,0,8,0"/>
+                <ui:Button Content="刷新" Click="Refresh_Click"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBox x:Name="ModSearch" Width="280" VerticalAlignment="Center" Padding="8,4"
+                         ToolTip="搜索已安装的模组" TextChanged="ModSearch_TextChanged"/>
+                <ComboBox x:Name="ModSort" Width="120" Margin="8,0,0,0" VerticalAlignment="Center"
+                          SelectedIndex="0" SelectionChanged="ModSort_SelectionChanged">
+                  <ComboBoxItem Content="按名称"/>
+                  <ComboBoxItem Content="按版本"/>
+                  <ComboBoxItem Content="下载时间"/>
+                  <ComboBoxItem Content="更新时间"/>
+                  <ComboBoxItem Content="作者"/>
+                </ComboBox>
+                <ComboBox x:Name="ModOrder" Width="72" Margin="8,0,0,0" VerticalAlignment="Center"
+                          SelectedIndex="0" SelectionChanged="ModSort_SelectionChanged">
+                  <ComboBoxItem Content="升序"/>
+                  <ComboBoxItem Content="降序"/>
+                </ComboBox>
+              </StackPanel>
+            </DockPanel>
+            <TextBlock x:Name="UpdateBanner" DockPanel.Dock="Top" Margin="0,0,0,8" Padding="10,8"
+                       Background="#F6E7A2" Foreground="#3A3208" TextWrapping="Wrap" Visibility="Collapsed"
+                       Cursor="Hand" MouseLeftButtonUp="UpdateBanner_Click"/>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+              <ui:Button Content="启用" Click="EnableMod_Click" Margin="0,0,8,0"/>
+              <ui:Button Content="停用" Click="DisableMod_Click" Margin="0,0,8,0"/>
+              <ui:Button Content="卸载" Background="White" Foreground="#D1242F" BorderBrush="#D1242F" Click="UninstallMod_Click"/>
+            </StackPanel>
+            <Grid>
+              <ListBox x:Name="ModsGrid" Background="White" Foreground="#1A1A1A" BorderThickness="0"
+                       SelectionMode="Extended" HorizontalContentAlignment="Stretch">
+              <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                  <Setter Property="Padding" Value="0"/>
+                  <Setter Property="Margin" Value="0,0,0,4"/>
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                  <Setter Property="Background" Value="#F7F8FA"/>
+                  <Setter Property="Foreground" Value="#1A1A1A"/>
+                  <Style.Triggers>
+                    <Trigger Property="IsSelected" Value="True">
+                      <Setter Property="Background" Value="#E8EEFF"/>
+                    </Trigger>
+                  </Style.Triggers>
+                </Style>
+              </ListBox.ItemContainerStyle>
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Grid Margin="12,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="240"/>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#1A1A1A" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding VersionText}" Foreground="#667085" FontSize="12"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding Description}" Foreground="#667085"
+                               VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                               ToolTip="{Binding Description}" Margin="12,0"/>
+                    <ToggleButton Grid.Column="2" Style="{StaticResource IosSwitch}" VerticalAlignment="Center"
+                                  IsChecked="{Binding Enabled, Mode=OneWay}" Click="ModToggle_Click"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+              <TextBlock x:Name="EmptyMods" Text="当前配置还没有模组。可以在左侧打开在线页面，或安装本地模组。"
+                         Foreground="#667085" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap"/>
+            </Grid>
+          </DockPanel>
+
+          <ContentControl x:Name="MarketHost" Visibility="Collapsed"/>
+          <ContentControl x:Name="ConfigHost" Visibility="Collapsed"/>
+          <ContentControl x:Name="LogHost" Visibility="Collapsed"/>
+          <ContentControl x:Name="SettingsHost" Visibility="Collapsed"/>
+        </Grid>
+        </Grid>
+      </Grid>
     </Grid>
 
-    <StatusBar Grid.Row="2" Padding="12,6">
-      <TextBlock x:Name="StatusText" Text="就绪"/>
+    <StatusBar Grid.Row="2" Padding="12,6" Background="#F7F8FA">
+      <TextBlock x:Name="StatusText" Text="就绪" Foreground="#1A1A1A"/>
     </StatusBar>
 
-    <Border x:Name="BusyOverlay" Grid.RowSpan="3" Background="#88000000" Visibility="Collapsed">
+    <Border x:Name="BusyOverlay" Grid.Row="1" Margin="232,0,0,0" Background="#88000000" Visibility="Collapsed">
       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
         <ui:ProgressRing IsIndeterminate="True" Width="48" Height="48"/>
         <TextBlock x:Name="BusyText" Text="处理中…" Foreground="White" Margin="0,12,0,0" HorizontalAlignment="Center"/>

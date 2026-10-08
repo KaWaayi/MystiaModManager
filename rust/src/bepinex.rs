@@ -4,8 +4,9 @@ use crate::profiles::{ensure_profile_layout, unique_profile_name, validate_profi
 use regex::Regex;
 use serde::Serialize;
 use std::fs::File;
-use std::io::copy;
+use std::io::{Read, Write, copy};
 use std::path::Path;
+use std::time::{Duration, Instant};
 use zip::ZipArchive;
 
 const BUILDS_PAGE: &str = "https://builds.bepinex.dev/projects/bepinex_be";
@@ -68,17 +69,122 @@ fn http_get_text(url: &str) -> Result<String> {
 }
 
 fn download_to_file(url: &str, dest: &Path) -> Result<()> {
-    let resp = ureq::get(url)
+    match stream_download(url, dest, true) {
+        Ok(()) => Ok(()),
+        Err(AppError::Msg(msg)) if msg == "slow" => {
+            let Some(fallback) = server_framework_url(url) else {
+                return Err(AppError::msg("官网下载过慢"));
+            };
+            let _ = std::fs::remove_file(dest);
+            stream_download(&fallback, dest, false)
+                .map_err(|e| AppError::msg(format!("已改从服务器下载，但仍失败: {e}")))
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn server_framework_url(url: &str) -> Option<String> {
+    if !url.contains("builds.bepinex.dev/") {
+        return None;
+    }
+    let raw = url.rsplit('/').next()?.split('?').next()?;
+    let name = raw.replace("%2B", "+").replace("%2b", "+");
+    if !name.starts_with("BepInEx-") || !name.to_ascii_lowercase().ends_with(".zip") {
+        return None;
+    }
+    Some(format!(
+        "http://47.116.214.184/framework/file?name={}",
+        query_escape(&name)
+    ))
+}
+
+fn query_escape(value: &str) -> String {
+    let mut out = String::new();
+    for b in value.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' => out.push(b as char),
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
+fn stream_download(url: &str, dest: &Path, watch_speed: bool) -> Result<()> {
+    let agent = ureq::AgentBuilder::new()
+        .timeout_connect(Duration::from_secs(15))
+        .timeout_read(Duration::from_secs(5))
+        .build();
+    let resp = agent
+        .get(url)
         .set("User-Agent", "MystiaModManager/0.1")
         .call()
         .map_err(|e| AppError::Http(e.to_string()))?;
+    if resp.status() != 200 {
+        return Err(AppError::msg(format!("下载失败 {}", resp.status())));
+    }
     let mut reader = resp.into_reader();
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent)?;
     }
     let mut file = File::create(dest)?;
-    copy(&mut reader, &mut file)?;
+    let mut buf = [0u8; 64 * 1024];
+    let mut window_start = Instant::now();
+    let mut window_bytes = 0u64;
+    let mut slow_for = Duration::ZERO;
+    loop {
+        match reader.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => {
+                file.write_all(&buf[..n])?;
+                if watch_speed
+                    && note_slow(
+                        &mut window_start,
+                        &mut window_bytes,
+                        &mut slow_for,
+                        n as u64,
+                    )
+                {
+                    return Err(AppError::msg("slow"));
+                }
+            }
+            Err(err)
+                if watch_speed
+                    && (err.kind() == std::io::ErrorKind::TimedOut
+                        || err.kind() == std::io::ErrorKind::WouldBlock) =>
+            {
+                slow_for += Duration::from_secs(5);
+                window_start = Instant::now();
+                window_bytes = 0;
+                if slow_for >= Duration::from_secs(15) {
+                    return Err(AppError::msg("slow"));
+                }
+            }
+            Err(err) => return Err(err.into()),
+        }
+    }
     Ok(())
+}
+
+    fn note_slow(
+    window_start: &mut Instant,
+    window_bytes: &mut u64,
+    slow_for: &mut Duration,
+    just_read: u64,
+) -> bool {
+    *window_bytes += just_read;
+    let elapsed = window_start.elapsed();
+    if elapsed < Duration::from_secs(1) {
+        return false;
+    }
+    let rate = *window_bytes as f64 / elapsed.as_secs_f64();
+    if rate < 150.0 * 1024.0 {
+        *slow_for += elapsed;
+    } else {
+        *slow_for = Duration::ZERO;
+    }
+    *window_start = Instant::now();
+    *window_bytes = 0;
+    *slow_for >= Duration::from_secs(15)
 }
 
 fn extract_zip(zip_path: &Path, dest: &Path) -> Result<()> {
@@ -240,4 +346,21 @@ fn copy_dir_merge(src: &Path, dest: &Path) -> Result<()> {
 
 pub fn cache_download_url(url: &str, dest: &Path) -> Result<()> {
     download_to_file(url, dest)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::server_framework_url;
+
+    #[test]
+    fn official_build_falls_back_to_server_file() {
+        let url = server_framework_url(
+            "https://builds.bepinex.dev/projects/bepinex_be/788/BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip",
+        )
+        .unwrap();
+        assert_eq!(
+            url,
+            "http://47.116.214.184/framework/file?name=BepInEx-Unity.IL2CPP-win-x64-6.0.0-be.788%2B5b766a3.zip"
+        );
+    }
 }

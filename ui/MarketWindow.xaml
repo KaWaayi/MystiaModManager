@@ -1,0 +1,65 @@
+<UserControl x:Class="MystiaModManager.MarketWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel>
+      <TextBlock Text="模组市场" FontSize="18" FontWeight="SemiBold"/>
+      <TextBlock x:Name="AccountText" TextWrapping="Wrap" Opacity="0.75" Margin="0,4,0,0"
+                 Text="未登录。可以查看列表。订阅、上传和下载请先在左下角登录。"/>
+    </StackPanel>
+
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="280"/>
+        <ColumnDefinition Width="12"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Top" Text="模组" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <ListBox x:Name="ModList" DisplayMemberPath="Title" SelectionChanged="ModList_OnSelectionChanged"/>
+      </DockPanel>
+      <DockPanel Grid.Column="2">
+        <StackPanel DockPanel.Dock="Top">
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Image x:Name="IconImage" Width="64" Height="64" Margin="0,0,12,0" Visibility="Collapsed"/>
+            <TextBlock x:Name="DetailTitle" Text="选择左侧模组" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <ui:Button Content="介绍" Click="IntroTab_Click" Margin="0,0,6,0"/>
+            <ui:Button Content="依赖" Click="DepTab_Click" Margin="0,0,6,0"/>
+            <ui:Button Content="预览" Click="TreeTab_Click"/>
+          </StackPanel>
+        </StackPanel>
+        <ComboBox x:Name="VersionBox" DockPanel.Dock="Bottom" Margin="0,8,0,0"/>
+        <Grid>
+          <ListBox x:Name="DepList" Visibility="Collapsed" MouseDoubleClick="DepList_OnMouseDoubleClick"/>
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <TextBlock x:Name="DetailBody" TextWrapping="Wrap"/>
+          </ScrollViewer>
+        </Grid>
+      </DockPanel>
+    </Grid>
+
+    <DockPanel Grid.Row="2" Margin="0,12,0,0">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+        <ui:Button Content="刷新" Click="Refresh_Click" Margin="0,0,8,0"/>
+        <ui:Button x:Name="SubscribeButton" Appearance="Primary" HorizontalContentAlignment="Center" Click="Subscribe_Click" Margin="0,0,8,0">
+          <Grid>
+            <TextBlock Text="取消订阅" Visibility="Hidden"/>
+            <TextBlock x:Name="SubscribeLabel" Text="订阅" HorizontalAlignment="Center"/>
+          </Grid>
+        </ui:Button>
+        <ui:Button Content="下载" Click="Download_Click" Margin="0,0,8,0"/>
+        <ui:Button x:Name="UploadButton" Content="上传" Visibility="Collapsed" Click="Upload_Click"/>
+      </StackPanel>
+      <TextBlock x:Name="StatusText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+    </DockPanel>
+  </Grid>
+</UserControl>

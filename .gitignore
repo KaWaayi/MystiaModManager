@@ -5,6 +5,8 @@
 /setup/obj/
 /updater/bin/
 /updater/obj/
+/tests/**/bin/
+/tests/**/obj/
 /dist/
 *.pdb
 .vs/

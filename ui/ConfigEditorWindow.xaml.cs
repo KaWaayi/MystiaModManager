@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using MystiaModManager.Logic;
 using MystiaModManager.Models;
 using MystiaModManager.Services;
 using MessageBoxButton = System.Windows.MessageBoxButton;
@@ -10,9 +12,9 @@ using MessageBoxResult = System.Windows.MessageBoxResult;
 
 namespace MystiaModManager;
 
-public partial class ConfigEditorWindow : Window
+public partial class ConfigEditorWindow : UserControl
 {
-    private readonly string _profilePath;
+    private string _profilePath;
     private List<CfgSetting>? _settings;
     private bool _loading;
     private string? _loadedFile;
@@ -158,6 +160,29 @@ public partial class ConfigEditorWindow : Window
             return combo;
         }
 
+        if (CfgRange.TryParse(setting.Hint, out var min, out var max)
+            && double.TryParse(setting.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var current))
+        {
+            if (current < min) current = min;
+            if (current > max) current = max;
+            var whole = min == Math.Floor(min) && max == Math.Floor(max);
+            var slider = new Slider
+            {
+                Minimum = min,
+                Maximum = max,
+                Value = current,
+                TickFrequency = whole ? 1 : (max - min) / 100,
+                IsSnapToTickEnabled = whole,
+                Margin = new Thickness(0, 4, 0, 4)
+            };
+            var label = new TextBlock { Text = FormatSlider(slider.Value, whole), Opacity = 0.75 };
+            slider.ValueChanged += (_, _) => label.Text = FormatSlider(slider.Value, whole);
+            var panel = new StackPanel { Tag = setting, Margin = new Thickness(0, 0, 0, 8) };
+            panel.Children.Add(slider);
+            panel.Children.Add(label);
+            return panel;
+        }
+
         return new TextBox
         {
             Text = setting.Value,
@@ -169,9 +194,10 @@ public partial class ConfigEditorWindow : Window
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         if (_settings == null || _loadedFile == null) return;
-        if (CoreApi.IsGameRunning())
+        var reject = ModWriteGuard.Reject(GameProcessQuery.AnyRunning(), "保存配置");
+        if (reject != null)
         {
-            System.Windows.MessageBox.Show("游戏正在运行，请先退出游戏后再保存。", "无法保存", MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show(reject, "请先退出游戏", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -199,9 +225,27 @@ public partial class ConfigEditorWindow : Window
                 CheckBox box => box.IsChecked == true ? "true" : "false",
                 ComboBox combo => combo.Text.Trim(),
                 TextBox text => text.Text.Trim(),
+                StackPanel panel => ReadSlider(panel, setting),
                 _ => setting.Value
             };
         }
+    }
+
+    private static string ReadSlider(StackPanel panel, CfgSetting setting)
+    {
+        foreach (var child in panel.Children)
+        {
+            if (child is not Slider slider) continue;
+            var whole = slider.Minimum == Math.Floor(slider.Minimum) && slider.Maximum == Math.Floor(slider.Maximum);
+            return FormatSlider(slider.Value, whole);
+        }
+        return setting.Value;
+    }
+
+    private static string FormatSlider(double value, bool whole)
+    {
+        if (whole) return Math.Round(value).ToString(CultureInfo.InvariantCulture);
+        return value.ToString("0.###", CultureInfo.InvariantCulture);
     }
 
     private bool HasUnsavedChanges()
@@ -225,5 +269,11 @@ public partial class ConfigEditorWindow : Window
                    MessageBoxImage.Warning) == MessageBoxResult.Yes;
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    public void LoadProfile(string profilePath)
+    {
+        _profilePath = profilePath;
+        LoadFileList();
+    }
+
+    private void Cancel_Click(object sender, RoutedEventArgs e) => LoadFileList();
 }

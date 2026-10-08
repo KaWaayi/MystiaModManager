@@ -20,6 +20,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\服务器\src\Izakaya.Rules\Izakaya.Rules.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
   <Target Name="CopyRustDll" AfterTargets="Build">
     <Copy SourceFiles="$(MSBuildProjectDirectory)\..\rust\target\release\mystia_core.dll"
           DestinationFolder="$(OutputPath)"

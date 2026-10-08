@@ -1,48 +1,71 @@
-# 夜雀食堂模组管理器（MystiaModManager）
+# 夜雀食堂模组管理器
 
-面向《东方夜雀食堂》的通用 BepInEx 模组管理器。第一版支持多配置、本地模组安装/启停、从管理器启动游戏，以及从 [BepInEx Bleeding Edge](https://builds.bepinex.dev/projects/bepinex_be) 安装/更新 IL2CPP win-x64 6.x 框架。
+《东方夜雀食堂》的 Windows 模组管理器。用来安装、开关 BepInEx 模组，管理多套配置，并从 Steam 启动游戏。
 
-## 镜像
+游戏是 Steam 上的东方夜雀食堂（AppID `1584090`），Unity IL2CPP。模组运行在 BepInEx 6 的 Windows x64 IL2CPP 构建上。
 
-| 角色 | 地址 |
+## 玩家可以做什么
+
+- **带模组启动**和**原版启动**都通过 Steam 启动，不附加额外参数。游戏正在运行时，启动按钮显示「游戏中」，点击不会再开一份。
+- 多套配置档。切换配置时，如果本机已经有更新的压缩包，直接解压，不再重新下载。
+- 已安装列表可以搜索，并按名称、版本、下载时间、更新时间或作者排序。下载时间、更新时间和作者只用于排序，不单独占一列。
+- 启用模组时，尚未启用的强依赖会一起启用；禁用时，仍启用着的依赖方会一起禁用。对应模组已经是目标状态时不再询问。提示里用模组名称。
+- 模组市场未登录也可以浏览。订阅、取消订阅、下载和上传需要登录。订阅和取消订阅是同一个按钮。
+- 订阅后安装到当前配置档，已上架的强依赖一并安装。取消订阅会从所有配置档删掉已解压的文件，压缩包留在配置目录的 `download` 里，依赖它的模组会被禁用而不是取消订阅。
+- 可以编辑当前配置档里的 cfg。配置要先运行一次游戏才会出现。改完必须保存，取消不会写入。
+- 可以查看游戏日志。异常退出后可以选择导出日志和存档。
+- 框架默认从 BepInEx 官网下载。速度低于 150KB/s 持续超过 15 秒时，改从服务器下载，这一步不需要登录。
+- 有下载时，左侧空白处显示进度。游戏进程退出后，左下角状态回到「就绪」。
+
+## 安装
+
+需要 Windows 10 1903 或更高版本，以及 Steam。界面使用系统自带的 .NET Framework 4.8，不需要再装 VC++ 运行库。
+
+把 `MystiaModManager.Setup.exe` 发给玩家即可。第一次运行是安装，会选择游戏目录、管理器目录和配置目录。之后这个文件也负责更新：它复制自己到临时目录，再下载并替换管理器文件，不改配置，也不改 `bootstrap.json`。
+
+管理器检查更新和模组市场走程序里配置的服务器，仓库说明不写服务器地址。
+
+## 给模组作者
+
+上传用的压缩包不看原文件名。服务器按 Manifest 里的 ID 和版本保存为 `{模组id}_{版本}.zip`。同一 ID 和版本不能重复上传。包里 DLL 的版本如果和 Manifest 不一致，以 Manifest 为准。
+
+压缩包根目录必须有 `Manifest.json`，并且至少包含 `plugins`、`patchers`、`ResourceEx` 之一。
+
+- `plugins` 和 `patchers` 解压到当前配置档的 `BepInEx` 里。
+- `ResourceEx` 解压到当前配置档的 `ResourceEx`。带模组启动时，游戏目录中的 `ResourceEx` 会指向这个文件夹。原版启动会取消这个指向。
+- 这三个目录以外的文件会忽略，但根上的 `README.md` 和 `icon.ico` 除外。
+- `icon.ico` 可以不放。放了就必须是 64×64。
+- 版本按数字分段比较，`1.10` 比 `1.9` 新。
+
+`Manifest.json` 使用 UTF-8：
+
+```json
+{
+  "id": "com.kawaayi.Example",
+  "name": "示例模组",
+  "version": "1.0.0",
+  "description": "一句话介绍",
+  "author": "作者名",
+  "dependencies": ["com.kawaayi.Base"],
+  "softDependencies": []
+}
+```
+
+| 字段 | 要求 |
 | --- | --- |
-| 主仓库 | GitHub：https://github.com/KaWaayi/MystiaModManager |
-| 备用 | Gitee：https://gitee.com/wjjnb666/MystiaModManager |
+| `id` | 必填，最长 128。不能包含换行、`/`、`\` |
+| `version` | 必填，最长 64。不能包含换行、`/`、`\` |
+| `name` | 列表里显示的名称，最长 256 |
+| `description` | 短介绍，最长 1024 |
+| `author` | 最长 128。空着时用上传者的用户名 |
+| `dependencies` | 强依赖，模组 ID 数组。没有就写 `[]` |
+| `softDependencies` | 弱依赖，不强制安装。没有就写 `[]` |
 
-安装器下载管理器本体时：**先试 GitHub**（约 15 秒连不上或迟迟无数据则放弃），**自动切到 Gitee**。可用环境变量覆盖：
+强依赖还没上架时，上传仍然接受。玩家订阅时如果缺的前置还没上架，这次订阅不会成功。弱依赖不会自动安装。只有管理员可以上传。下载次数按账号去重。
 
-```powershell
-$env:MYSTIA_GITHUB_REPO = "owner/MystiaModManager"
-$env:MYSTIA_GITEE_REPO   = "owner/MystiaModManager"
-```
+## 开发
 
-发版时请在 **GitHub Release 与 Gitee Release 都挂上同一份** `MystiaModManager.zip`（可用 `scripts/build.ps1` 打出）。
-
-## 玩家侧依赖
-
-无需额外安装：
-
-- 界面：.NET Framework 4.8 + WPF-UI（Windows 10 1903+ / Windows 11 自带 4.8）
-- 核心：Rust DLL（`+crt-static`，不要求 VC++ 运行库）
-
-## 目录结构
-
-```
-MystiaModManager/          # 管理器程序（可由安装器覆盖）
-MystiaModManagerConfig/    # 配置父目录（安装器不覆盖）
-  manager.json
-  profiles/
-    Default/
-      BepInEx/
-      dotnet/
-      winhttp.dll
-```
-
-默认路径：游戏不在 `C:` 时放在游戏盘符根目录；在 `C:` 时放在 `%AppData%`。
-
-## 开发构建
-
-需要：Rust stable、.NET SDK（能编译 net48）。
+需要 Rust stable 和能编译 `net48` 的 .NET SDK。
 
 ```powershell
 .\scripts\build.ps1
@@ -50,19 +73,17 @@ MystiaModManagerConfig/    # 配置父目录（安装器不覆盖）
 
 产物：
 
-- `ui\bin\Release\MystiaModManager.exe`
-- `dist\MystiaModManager.Setup.exe`（单文件安装器，给玩家）
-- `dist\MystiaModManager.zip`（上传到 GitHub / Gitee Release）
+- `ui\bin\Release\MystiaModManager.exe`：管理器
+- `dist\MystiaModManager.Setup.exe`：安装器，同时也是更新程序
+- `dist\MystiaModManager.zip`：管理器完整包，交给服务器上的 `/manager/file`
 
-安装器会优先使用旁边的本地 UI 构建；否则按上面的 GitHub → Gitee 顺序下载。
+仓库大致是：
 
-## 启动行为
+```
+ui/        WPF 界面
+rust/      mystia_core.dll，路径、配置档、框架下载、启停
+setup/     安装器与更新
+tests/     界面逻辑测试
+```
 
-- **从管理器启动**：覆盖游戏目录 `winhttp.dll`，并把 `doorstop_config.ini` 写成当前配置的绝对路径，游戏退出后也保留。Steam 若在第一次进程退出后立刻再启动游戏，第二次仍会加载这套模组。不附加命令行参数，避免每次弹出「用自定义参数启动游戏」。
-- **从 Steam 直接启动**：游戏目录里的 `doorstop_config.ini` 使用相对路径；若游戏目录下没有 `BepInEx`，则保持原版。若你本机游戏目录里已有一份 BepInEx，Steam 仍会加载那一份（管理器不会移动它）。
-
-## 第一版范围
-
-已实现：路径探测、多配置、本地 zip/dll 安装、`.dll.off` 启停、BepInEx 构建站安装/更新、Doorstop 钩子、游戏占用保护、GitHub/Gitee 双源下载。检查更新、下载和覆盖都在 `MystiaModManager.Update.exe` 里，界面只负责启动它。cfg 读写在 Rust 里，界面只负责编辑。
-
-未实现：在线模组 JSON、依赖关系。
+配置目录和程序目录分开。已下载的模组包在配置目录的 `download/`，登录状态在同一层的 `session.json`。更新不会覆盖这些文件。

@@ -1,0 +1,21 @@
+<Window x:Class="MystiaModManager.LaunchNoticeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="启动"
+        Width="460"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White"
+        Foreground="#1A1A1A"
+        PreviewKeyDown="OnPreviewKeyDown">
+  <StackPanel Margin="28,24,28,20">
+    <TextBlock x:Name="HeadingText" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap"/>
+    <TextBlock Text="关闭此消息以继续修改。" Margin="0,16,0,10" FontSize="14"/>
+    <TextBlock Text="如果需要一段时间，很可能是因为 Steam 正在启动。请耐心等待。"
+               TextWrapping="Wrap" Foreground="#667085"/>
+    <ui:Button Content="关闭" Appearance="Primary" HorizontalAlignment="Right" Margin="0,20,0,0"
+               IsDefault="True" Click="Close_Click"/>
+  </StackPanel>
+</Window>

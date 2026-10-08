@@ -5,15 +5,28 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MystiaModManager.Update;
+namespace MystiaModManager.Setup;
 
-internal static class Program
+internal static class UpdateMode
 {
+    public static bool IsUpdate(string[] args)
+    {
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--dir") return true;
+        }
+        return false;
+    }
 
-    [STAThread]
-    private static int Main(string[] args)
+    public static int Run(string[] args)
+    {
+        return Task.Run(() => RunCore(args)).GetAwaiter().GetResult();
+    }
+
+    static int RunCore(string[] args)
     {
         string? dir = null;
         var pid = 0;
@@ -22,36 +35,32 @@ internal static class Program
             if (args[i] == "--pid" && i + 1 < args.Length) pid = int.Parse(args[++i]);
             else if (args[i] == "--dir" && i + 1 < args.Length) dir = args[++i];
         }
-
         if (string.IsNullOrWhiteSpace(dir))
         {
             MessageBox.Show("更新程序缺少参数。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 1;
         }
         var targetDir = dir!;
-
         try
         {
             var local = ReadLocalVersion(targetDir);
             var offer = FindLatest();
-            if (!IsNewer(offer.Tag, local))
+            if (!IsNewer(offer.Version, local))
             {
-                MessageBox.Show($"当前已是最新版本 {local}。", "检查更新", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("当前已是最新版本 " + local + "。", "检查更新", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return 0;
             }
-
             var answer = MessageBox.Show(
-                $"发现 {offer.Tag}（当前 {local}）。\n将从 {offer.Source} 下载并重启管理器。配置目录不会被覆盖。",
+                "发现 " + offer.Version + "（当前 " + local + "）。\n将从服务器下载并重启管理器。配置目录不会被覆盖。",
                 "检查更新",
                 MessageBoxButtons.OKCancel,
                 MessageBoxIcon.Information);
             if (answer != DialogResult.OK) return 0;
-
             WaitForManager(pid);
             var zipPath = Path.Combine(Path.GetTempPath(), "MystiaModManager-update.zip");
             Download(offer.Url, zipPath);
             Extract(zipPath, targetDir);
-            try { File.Delete(zipPath); } catch { /* ignore */ }
+            try { File.Delete(zipPath); } catch { }
             StartManager(targetDir);
             return 0;
         }
@@ -64,15 +73,15 @@ internal static class Program
         }
     }
 
-    private static string ReadLocalVersion(string dir)
+    static string ReadLocalVersion(string dir)
     {
         var exe = Path.Combine(dir, "MystiaModManager.exe");
         if (!File.Exists(exe)) return "0.0.0";
         var info = FileVersionInfo.GetVersionInfo(exe);
-        return $"{info.FileMajorPart}.{info.FileMinorPart}.{Math.Max(info.FileBuildPart, 0)}";
+        return info.FileMajorPart + "." + info.FileMinorPart + "." + Math.Max(info.FileBuildPart, 0);
     }
 
-    private static bool IsNewer(string tag, string localText)
+    static bool IsNewer(string tag, string localText)
     {
         var remote = tag.Trim().TrimStart('v', 'V');
         if (!Version.TryParse(remote, out var rv)) return true;
@@ -80,26 +89,24 @@ internal static class Program
         return rv > local;
     }
 
-    private static Offer FindLatest()
+    static Offer FindLatest()
     {
-        var json = GetString("http://47.116.214.184/manager/version", 20);
+        var json = GetString("http://47.116.214.184/manager/version");
         var match = Regex.Match(json, "\"version\"\\s*:\\s*\"([^\"]+)\"");
         if (!match.Success) throw new InvalidOperationException("服务器没有返回管理器版本");
-        return new Offer(match.Groups[1].Value, "http://47.116.214.184/manager/file", "服务器");
+        return new Offer(match.Groups[1].Value, "http://47.116.214.184/manager/file");
     }
 
-    private static string GetString(string url, int timeoutSeconds)
+    static string GetString(string url)
     {
         using var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("MystiaModManager.Update/1");
-        http.Timeout = TimeSpan.FromSeconds(timeoutSeconds + 5);
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
-        using var resp = http.GetAsync(url, cts.Token).GetAwaiter().GetResult();
+        http.Timeout = TimeSpan.FromSeconds(20);
+        using var resp = http.GetAsync(url).GetAwaiter().GetResult();
         resp.EnsureSuccessStatusCode();
         return resp.Content.ReadAsStringAsync().GetAwaiter().GetResult();
     }
 
-    private static void WaitForManager(int pid)
+    static void WaitForManager(int pid)
     {
         if (pid <= 0) return;
         try
@@ -112,15 +119,13 @@ internal static class Program
         }
         catch (ArgumentException)
         {
-            // Already gone.
         }
         Thread.Sleep(400);
     }
 
-    private static void Download(string url, string destPath)
+    static void Download(string url, string destPath)
     {
         using var http = new HttpClient();
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("MystiaModManager.Update/1");
         http.Timeout = TimeSpan.FromMinutes(10);
         using var resp = http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
         resp.EnsureSuccessStatusCode();
@@ -130,7 +135,7 @@ internal static class Program
         if (file.Length == 0) throw new InvalidOperationException("下载内容为空");
     }
 
-    private static void Extract(string zipPath, string managerDir)
+    static void Extract(string zipPath, string managerDir)
     {
         using var zip = ZipFile.OpenRead(zipPath);
         foreach (var entry in zip.Entries)
@@ -145,7 +150,7 @@ internal static class Program
         }
     }
 
-    private static void StartManager(string dir)
+    static void StartManager(string dir)
     {
         Process.Start(new ProcessStartInfo
         {
@@ -155,17 +160,15 @@ internal static class Program
         });
     }
 
-    private sealed class Offer
+    sealed class Offer
     {
-        public Offer(string tag, string url, string source)
+        public Offer(string version, string url)
         {
-            Tag = tag;
+            Version = version;
             Url = url;
-            Source = source;
         }
 
-        public string Tag { get; }
+        public string Version { get; }
         public string Url { get; }
-        public string Source { get; }
     }
 }
